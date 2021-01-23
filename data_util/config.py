@@ -1,7 +1,8 @@
-train_data_path = 	"data/chunked/train/train_*"
-valid_data_path = 	"data/chunked/valid/valid_*"
-test_data_path = 	"data/chunked/test/test_*"
-vocab_path = 		"data/vocab"
+path=r"C:\Users\mk168\Desktop\current_project\abs\data\CAIL2020_zy\Text-Summarizer-Pytorch\doc_sum\\"
+train_data_path = path+"chunked/train/train_*"
+valid_data_path = path+"chunked/valid/valid_*"
+test_data_path = path+"chunked/test/test_*"
+vocab_path = path+"vocab"
 
 
 # Hyperparameters
@@ -22,7 +23,7 @@ eps = 1e-12
 max_iterations = 500000
 
 
-save_model_path = "data/saved_models"
+save_model_path = path+"saved_models"
 
 intra_encoder = True
 intra_decoder = True

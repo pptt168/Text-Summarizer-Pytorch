@@ -7,14 +7,15 @@ import struct
 import random
 import shutil
 
-finished_path = "data/finished"
-unfinished_path = "data/unfinished"
-chunk_path = "data/chunked"
+path = r"C:/Users/mk168/Desktop/current_project/abs/data/CAIL2020_zy/Text-Summarizer-Pytorch/doc_sum/"
+finished_path = path+"finished"
+unfinished_path = path+"unfinished"
+chunk_path = path+"chunked"
 
-vocab_path = "data/vocab"
-VOCAB_SIZE = 200000
+vocab_path = path+"vocab"
+VOCAB_SIZE = 50000
 
-CHUNK_SIZE = 15000 # num examples per chunk, for the chunked data
+CHUNK_SIZE = 100  # num examples per chunk, for the chunked data
 train_bin_path = os.path.join(finished_path, "train.bin")
 valid_bin_path = os.path.join(finished_path, "valid.bin")
 
@@ -26,9 +27,11 @@ def delete_folder(folder_path):
     if os.path.exists(folder_path):
         shutil.rmtree(folder_path)
 
-def shuffle_text_data(unshuffled_art, unshuffled_abs, shuffled_art, shuffled_abs):
-    article_itr = open(os.path.join(unfinished_path, unshuffled_art), "r")
-    abstract_itr = open(os.path.join(unfinished_path, unshuffled_abs), "r")
+def shuffle_text_data(unshuffled_art, unshuffled_abs, shuffled_art,
+                      shuffled_abs):
+    article_itr = open(os.path.join(unfinished_path, unshuffled_art), "r", encoding='utf-8')
+    abstract_itr = open(os.path.join(
+        unfinished_path, unshuffled_abs), "r", encoding='utf-8')
     list_of_pairs = []
     for article in article_itr:
         article = article.strip()
@@ -37,27 +40,29 @@ def shuffle_text_data(unshuffled_art, unshuffled_abs, shuffled_art, shuffled_abs
     article_itr.close()
     abstract_itr.close()
     random.shuffle(list_of_pairs)
-    article_itr = open(os.path.join(unfinished_path, shuffled_art), "w")
-    abstract_itr = open(os.path.join(unfinished_path, shuffled_abs), "w")
+    article_itr = open(os.path.join(unfinished_path, shuffled_art), "w", encoding='utf-8')
+    abstract_itr = open(os.path.join(unfinished_path, shuffled_abs), "w", encoding='utf-8')
     for pair in list_of_pairs:
-        article_itr.write(pair[0]+"\n")
-        abstract_itr.write(pair[1]+"\n")
+        article_itr.write(pair[0] + "\n")
+        abstract_itr.write(pair[1] + "\n")
     article_itr.close()
     abstract_itr.close()
 
-def write_to_bin(article_path, abstract_path, out_file, vocab_counter = None):
+def write_to_bin(article_path, abstract_path, out_file, vocab_counter=None):
 
     with open(out_file, 'wb') as writer:
 
-        article_itr = open(article_path, 'r')
-        abstract_itr = open(abstract_path, 'r')
+        article_itr = open(article_path, 'r', encoding='utf-8')
+        abstract_itr = open(abstract_path, 'r', encoding='utf-8')
         for article in tqdm.tqdm(article_itr):
             article = article.strip()
             abstract = next(abstract_itr).strip()
 
             tf_example = example_pb2.Example()
-            tf_example.features.feature['article'].bytes_list.value.extend([article])
-            tf_example.features.feature['abstract'].bytes_list.value.extend([abstract])
+            tf_example.features.feature['article'].bytes_list.value.extend(
+                [bytes(article, encoding='utf8')])
+            tf_example.features.feature['abstract'].bytes_list.value.extend(
+                [bytes(abstract, encoding='utf8')])
             tf_example_str = tf_example.SerializeToString()
             str_len = len(tf_example_str)
             writer.write(struct.pack('q', str_len))
@@ -66,15 +71,13 @@ def write_to_bin(article_path, abstract_path, out_file, vocab_counter = None):
             if vocab_counter is not None:
                 art_tokens = article.split(' ')
                 abs_tokens = abstract.split(' ')
-                # abs_tokens = [t for t in abs_tokens if
-                #               t not in [SENTENCE_START, SENTENCE_END]]  # remove these tags from vocab
                 tokens = art_tokens + abs_tokens
                 tokens = [t.strip() for t in tokens]  # strip
                 tokens = [t for t in tokens if t != ""]  # remove empty
                 vocab_counter.update(tokens)
 
     if vocab_counter is not None:
-        with open(vocab_path, 'w') as writer:
+        with open(vocab_path, 'w', encoding='utf-8') as writer:
             for word, count in vocab_counter.most_common(VOCAB_SIZE):
                 writer.write(word + ' ' + str(count) + '\n')
 
@@ -84,8 +87,12 @@ def creating_finished_data():
 
     vocab_counter = collections.Counter()
 
-    write_to_bin(os.path.join(unfinished_path, "train.art.shuf.txt"), os.path.join(unfinished_path, "train.abs.shuf.txt"), train_bin_path, vocab_counter)
-    write_to_bin(os.path.join(unfinished_path, "valid.art.shuf.txt"), os.path.join(unfinished_path, "valid.abs.shuf.txt"), valid_bin_path)
+    write_to_bin(os.path.join(unfinished_path, "train.art.shuf.txt"),
+                 os.path.join(unfinished_path, "train.abs.shuf.txt"),
+                 train_bin_path, vocab_counter)
+    write_to_bin(os.path.join(unfinished_path, "valid.art.shuf.txt"),
+                 os.path.join(unfinished_path, "valid.abs.shuf.txt"),
+                 valid_bin_path)
 
 
 def chunk_file(set_name, chunks_dir, bin_file):
